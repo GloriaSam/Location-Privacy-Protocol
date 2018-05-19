@@ -15,16 +15,17 @@ from collections import Counter
 class SbfProvider(object):
    
     def __init__(self):
+        """Init socket stream."""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('localhost', 2323))
         self.sock.listen(5)
 
     def close_stream(self):
-        """This method will close the socket stream."""
+        """Close socket stream."""
         self.sock.close()
         
     def create_sbf(self):
-        """Inits the provider's sbf.
+        """Init the provider's sbf.
 
         The function asks to the user:
             - name of the areas data file
@@ -102,9 +103,6 @@ class SbfProvider(object):
     def encrypt_sbf(self):
         """Encrypt sbf with pailler publick key.
 
-        Args:
-            sbf_vector
-            self.public_key (PaillerPublicKey): pailler public key class
         Returns:
             enc_sbf_vector (list): encrypted sbf
 
