@@ -49,7 +49,7 @@ class SbfUser(object):
             tuple: the user's sbf (list) and the number of non zero values
             therein (int)
         """
-        user_sbf = sbf(sbf_data['bit_mapping'], sbf_data['hash_family'], sbf_data['hash_runs'], 1,"salt")
+        user_sbf = sbf(sbf_data['bit_mapping'], sbf_data['hash_family'], sbf_data['hash_runs'], 1, sbf_data['salt'])
         user_sbf.insert(position, 1)
         non_zero = np.count_nonzero(user_sbf.filter == 1)
         return user_sbf, non_zero
@@ -79,7 +79,6 @@ class SbfUser(object):
         while True:
             position = input("Enter your position (longitude, latitude) as [xx.xxxx#yy.yyyy]\n").rstrip()
             #TODO:input check
-
             user_sbf, non_zero = self.generate_sbf(position, sbf_data)
             mask = self.mask_message(user_sbf.filter, sbf_data['enc_sbf_vector'])
             data = {

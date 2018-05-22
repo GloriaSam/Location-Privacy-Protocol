@@ -75,7 +75,8 @@ class SbfProvider(object):
         print("Resulting number of hash runs: ", self.hash_runs)
 
         # TODO: How should I set the salt?
-        self.sbf_vector = sbf(self.bit_mapping, self.hash_family, self.hash_runs, self.num_areas, "salt")
+        self.salt = "salt"
+        self.sbf_vector = sbf(self.bit_mapping, self.hash_family, self.hash_runs, self.num_areas, self.salt)
         self.sbf_vector.insert_from_file(file_path)
         self.sbf_vector.print_filter(0)
 
@@ -166,6 +167,7 @@ class SbfProvider(object):
             bit_mapping (int)
             hash_family (str)
             hash_runs (int)
+            salt (str)
 
             mask (list): encrypted and shuffles user's sbf
             non_zero (int): number of no zero values in the user's computed sbf
@@ -181,7 +183,8 @@ class SbfProvider(object):
                     "enc_sbf_vector": self.enc_sbf_vector,
                     "bit_mapping": self.bit_mapping,
                     "hash_family": self.hash_family,
-                    "hash_runs": self.hash_runs
+                    "hash_runs": self.hash_runs,
+                    "salt": self.salt
                 }
                 util.packet_send(user_socket, 'S', data)
             elif req_type is 'C':
