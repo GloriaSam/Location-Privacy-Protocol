@@ -21,7 +21,7 @@ The SBFs protocol have been proposed in the following research papers:
 - Paolo Palmieri, Luca Calderoni, Dario Maio: *Spatial Bloom Filters: Enabling Privacy in Location-aware Applications*. In: Inscrypt 2014. Lecture Notes in Computer Science, vol. 8957, pp. 16–36, Springer, 2015. [DOI](http://dx.doi.org/10.1007/978-3-319-16745-9_2 "DOI")
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgements 
 This project uses several Python modules and in particular: numpy, socket, joblib, collections.
