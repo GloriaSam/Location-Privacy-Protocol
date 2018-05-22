@@ -11,7 +11,7 @@ The protocol is designed for a secure multi-party computation setting, where the
 This project required you to install the following python-paillier library
 
 ```
-pip phe 
+pip install -r requirements.txt 
 ```
 You will also need the spacial bloom filter class. You can find it here: https://github.com/spatialbloomfilter/libSBF-python
 
