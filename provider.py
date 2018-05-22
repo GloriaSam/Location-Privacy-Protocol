@@ -13,7 +13,17 @@ from random import shuffle
 from collections import Counter
 
 class SbfProvider(object):
-   
+    """Provider Class of the location privacy protocol.
+       The protocol is realized in the loop() funcion of this class.
+       
+       1. The provider generates a pair of asimetric key using Pailler's homomorphic cryptosystem
+       2. The provider sends to the user the enrcyption of the precomputed sbf: Enc(b#)
+       3. The provider receives the user's shuffled e# = Enc(b#) * b_u# and the
+           number of non-zero values in b_u#: z. If z is > of the number of
+           non-zero in Dec(e#) the user's position is outside any monitored area.
+           Otherwise the smallest non-zero value in Dec(e#) is the area's index
+           identifying user's position.  
+    """
     def __init__(self):
         """Init socket stream."""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -72,7 +82,7 @@ class SbfProvider(object):
         return self.sbf_vector
 
     def obfuscate_zeros(self):
-        """ Hide the server's AoI to the client, and it hide the client's position to the server
+        """ Hide the server's AoI to the user, and it hide the user's position to the server
 
         1. count the no zero values inside the sbf (NZ)
         2. count the number of elements per the N areas Ei = (E1, E2 ... EN)
@@ -105,7 +115,6 @@ class SbfProvider(object):
 
         Returns:
             enc_sbf_vector (list): encrypted sbf
-
         """
         self.public_key, self.private_key = paillier.generate_paillier_keypair(None, 1024)
         self.obfuscate_zeros()
@@ -126,28 +135,30 @@ class SbfProvider(object):
         print("\nFILTER ENCRYPTED") 
         return self.enc_sbf_vector
 
-    def check_user_position(self, num_nozero, mask):
+    def check_user_position(self, user_non_zero, mask):
         """Chek if users is inside any area, and in case return it.
 
         Args:
-            enc_client_sbf (list): client's encrypted and shuffled sbf
-            num_nozero (int): number of no zero req_types in the client's computed sbf
+            enc_user_sbf (list): user's encrypted and shuffled sbf
+            num_nozero (int): number of no zero values in the user's computed sbf
         Returns:
-            client_area (int): client's located area
+            user_area (int): user's located area
         """
-        if (num_nozero <= 0):
-            print("User it outside any area\n")
-            return
-        dec_client_sbf = Parallel(n_jobs=4)(
+        dec_user_sbf = Parallel(n_jobs=4)(
             delayed(self.private_key.raw_decrypt)(int(x)) for x in mask if x != 0)
-        client_area = min(dec_client_sbf)
-        return client_area
+        dec_non_zero = np.count_nonzero(dec_user_sbf) 
+        if (dec_non_zero < user_non_zero):
+            #user outside of any area
+            user_area = -1
+        else:
+            user_area = min(dec_user_sbf)
+        return user_area
 
     def loop(self):
-        """Create socket send sbf datas then waith until recives client datas.
+        """Create socket send sbf datas then waith until recives user datas.
         
         receive S as send sbf data
-        receive C as check client position 
+        receive C as check user position 
 
         Args:
             enc_sbf_vector (list)
@@ -156,12 +167,12 @@ class SbfProvider(object):
             hash_family (str)
             hash_runs (int)
 
-            mask (list): encrypted and shuffles client's sbf
-            non_zero (int): number of no zero values in the client's computed sbf
+            mask (list): encrypted and shuffles user's sbf
+            non_zero (int): number of no zero values in the user's computed sbf
             """
-        client_socket, addr = self.sock.accept()
+        user_socket, addr = self.sock.accept()
         while True:
-            msg, req_type  = util.packet_recv(client_socket)
+            msg, req_type  = util.packet_recv(user_socket)
             if req_type is 'S':
                 print("Received sbf request")
                 self.create_sbf() 
@@ -172,24 +183,24 @@ class SbfProvider(object):
                     "hash_family": self.hash_family,
                     "hash_runs": self.hash_runs
                 }
-                util.packet_send(client_socket, 'S', data)
+                util.packet_send(user_socket, 'S', data)
             elif req_type is 'C':
                 print("Received check request")
-                client_area = self.check_user_position(msg['non_zero'], msg['mask'])
-                if (client_area <= 0):
-                    print(addr, "it outside any area")
+                user_area = self.check_user_position(msg['non_zero'], msg['mask'])
+                if (user_area <= 0):
+                    print(addr, "user it outside any area")
                 else:
-                    print(addr, "is inside area ", client_area)
-        client_socket.close()
+                    print(addr, "user is inside area:", user_area)
+        user_socket.close()
 
 def main():
     try:
-        provider = SbfProvider()
-        provider.loop()
+        p = SbfProvider()
+        p.loop()
     except socket.error:
         print('socket error')
     finally:
-        provider.close_stream()
+        p.close_stream()
 
 if __name__ == '__main__':
     main()
