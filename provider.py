@@ -96,13 +96,13 @@ class SbfProvider():
         self.e_i = dict(zip(unique, counts))
         M = self.e_i[0]
         del self.e_i[0]
-        max_e_i = max(self.e_i) 
-        min_e_i = min(self.e_i) 
+        max_e_i = max(self.e_i.values()) 
+        min_e_i = min(self.e_i.values()) 
         tot = M
         self.obfuscated_zeros = []
         while (tot > 0):
             size_zero_set = randint(min_e_i, max_e_i)
-            if size_zero_set < tot: 
+            if size_zero_set > tot: 
                 size_zero_set = tot
             r_value = self.public_key.get_random_lt_n()
             self.obfuscated_zeros += size_zero_set * [self.public_key.raw_encrypt(0, r_value)]
