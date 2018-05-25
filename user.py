@@ -54,19 +54,19 @@ class SbfUser(object):
         non_zero = np.count_nonzero(user_sbf.filter == 1)
         return user_sbf, non_zero
 
-    def mask_message(self, user_sbf_vector, enc_provider_sbf_vector):
+    def mask_message(self, user_sbf_vector, provider_sbf_vector_enc):
         """Computes element-wise multiplication:
-            mask = enc_provider_sbf_vector * user_sbf_vector.
+            mask = provider_sbf_vector_enc * user_sbf_vector.
             
         Args:
             user_sbf_vector (list) the user's sbf
-            enc_provider_sbf_vector (list) the encrypted provider's sbf
+            provider_sbf_vector_enc (list) the encrypted provider's sbf
 
         Returns:
             mask (list) 
             """
         mask = []
-        for i,enc in enumerate(enc_provider_sbf_vector):
+        for i, enc in enumerate(provider_sbf_vector_enc):
             mask.append(user_sbf_vector[i] * enc)
         return mask
         
@@ -80,7 +80,7 @@ class SbfUser(object):
             position = input("Enter your position (longitude, latitude) as [xx.xxxx#yy.yyyy]\n").rstrip()
             #TODO:input check
             user_sbf, non_zero = self.generate_sbf(position, sbf_data)
-            mask = self.mask_message(user_sbf.filter, sbf_data['enc_sbf_vector'])
+            mask = self.mask_message(user_sbf.filter, sbf_data['sbf_vector_enc'])
             data = {
                     "non_zero": non_zero,
                     "mask": mask

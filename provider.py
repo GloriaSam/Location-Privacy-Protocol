@@ -51,7 +51,7 @@ class SbfProvider():
             hash_family (str): hash function used for sbf
             self.hash_runs (int): number of the hash runs
         """
-        file_path = input("Enter the path for the verification test\n").rstrip()
+        file_path = input("Enter the path for the verification test [vatican-city-0001.csv]\n").rstrip()
 
         self.num_elements = 0
         areas = []
@@ -115,7 +115,7 @@ class SbfProvider():
         """Encrypt sbf with pailler publick key.
 
         Returns:
-            enc_sbf_vector (list): encrypted sbf
+            sbf_vector_enc (list): encrypted sbf
         """
         self.public_key, self.private_key = paillier.generate_paillier_keypair(None, 1024)
         self.obfuscate_zeros()
@@ -126,16 +126,16 @@ class SbfProvider():
             e_i_enc[k] = self.public_key.raw_encrypt(int(k), e_i_r_value)
 
         obf_index = 0
-        self.enc_sbf_vector = []
+        self.sbf_vector_enc = []
         for e in self.sbf_vector.filter:
             if e == 0:
-                self.enc_sbf_vector.append(self.obfuscated_zeros[obf_index])
+                self.sbf_vector_enc.append(self.obfuscated_zeros[obf_index])
                 obf_index += 1
             else:
-                self.enc_sbf_vector.append(e_i_enc[e])
+                self.sbf_vector_enc.append(e_i_enc[e])
         
         print("\nFILTER ENCRYPTED\n") 
-        return self.enc_sbf_vector
+        return self.sbf_vector_enc
 
     def check_user_position(self, user_non_zero, mask):
         """Chek if users is inside any area, and in case return it.
@@ -146,14 +146,14 @@ class SbfProvider():
         Returns:
             user_area (int): user's located area
         """
-        dec_user_sbf = Parallel(n_jobs=4)(
+        user_sbf_dec = Parallel(n_jobs=4)(
             delayed(self.private_key.raw_decrypt)(int(x)) for x in mask if x != 0)
-        dec_non_zero = np.count_nonzero(dec_user_sbf) 
-        if (dec_non_zero < user_non_zero):
+        non_zero_dec = np.count_nonzero(user_sbf_dec) 
+        if (non_zero_dec < user_non_zero):
             #user outside of any area
             user_area = -1
         else:
-            user_area = min(dec_user_sbf)
+            user_area = min(user_sbf_dec)
         return user_area
 
     def loop(self):
@@ -163,7 +163,7 @@ class SbfProvider():
         receive C as check user position 
 
         Args:
-            enc_sbf_vector (list)
+            sbf_vector_enc (list)
             public_key (PaillierPublicKey)
             bit_mapping (int)
             hash_family (str)
@@ -181,7 +181,7 @@ class SbfProvider():
                 self.create_sbf() 
                 self.encrypt_sbf()
                 data = {
-                    "enc_sbf_vector": self.enc_sbf_vector,
+                    "sbf_vector_enc": self.sbf_vector_enc,
                     "bit_mapping": self.bit_mapping,
                     "hash_family": self.hash_family,
                     "hash_runs": self.hash_runs,
