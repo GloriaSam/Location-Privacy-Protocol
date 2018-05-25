@@ -29,7 +29,7 @@ class SbfUser(object):
             - non zero values
             - e#
     """
-    def __init__(self, HOST="localhost", PORT=2323):
+    def __init__(self, HOST="localhost", PORT=2324):
         """This method creates the socket stream."""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((HOST, PORT))

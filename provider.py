@@ -2,8 +2,8 @@
 
 import math
 import util
-import socket
 import numpy as np
+import socket
 
 from sbf import sbf
 from phe import paillier
@@ -12,7 +12,7 @@ from random import randint
 from random import shuffle
 from collections import Counter
 
-class SbfProvider(object):
+class SbfProvider():
     """Provider Class of the location privacy protocol.
        The protocol is realized in the loop() funcion of this class.
        
@@ -27,7 +27,7 @@ class SbfProvider(object):
     def __init__(self):
         """Init socket stream."""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(('localhost', 2323))
+        self.sock.bind(('localhost', 2324))
         self.sock.listen(5)
 
     def close_stream(self):
@@ -92,6 +92,7 @@ class SbfProvider(object):
         5. shuffle the list
         """
         unique, counts = np.unique(self.sbf_vector.filter, return_counts=True)
+        # e_i -> key = area_index, value = number_of_elements
         self.e_i = dict(zip(unique, counts))
         M = self.e_i[0]
         del self.e_i[0]
@@ -104,8 +105,7 @@ class SbfProvider(object):
             if size_zero_set < tot: 
                 size_zero_set = tot
             r_value = self.public_key.get_random_lt_n()
-            for y in range(size_zero_set):
-               self.obfuscated_zeros.append(self.public_key.raw_encrypt(0, r_value)) 
+            self.obfuscated_zeros += size_zero_set * [self.public_key.raw_encrypt(0, r_value)]
             tot -= size_zero_set 
 
         shuffle(self.obfuscated_zeros)
@@ -120,20 +120,21 @@ class SbfProvider(object):
         self.public_key, self.private_key = paillier.generate_paillier_keypair(None, 1024)
         self.obfuscate_zeros()
         
-        e_i_r_value = self.e_i 
+        e_i_enc = self.e_i 
         for k,v in self.e_i.items():
-            e_i_r_value[k] = self.public_key.get_random_lt_n()
+            e_i_r_value = self.public_key.get_random_lt_n()
+            e_i_enc[k] = self.public_key.raw_encrypt(int(k), e_i_r_value)
 
         obf_index = 0
         self.enc_sbf_vector = []
-        for element in self.sbf_vector.filter:
-            if element == 0:
+        for e in self.sbf_vector.filter:
+            if e == 0:
                 self.enc_sbf_vector.append(self.obfuscated_zeros[obf_index])
                 obf_index += 1
             else:
-                self.enc_sbf_vector.append(self.public_key.raw_encrypt(int(element), e_i_r_value[element]))
+                self.enc_sbf_vector.append(e_i_enc[e])
         
-        print("\nFILTER ENCRYPTED") 
+        print("\nFILTER ENCRYPTED\n") 
         return self.enc_sbf_vector
 
     def check_user_position(self, user_non_zero, mask):
@@ -197,8 +198,8 @@ class SbfProvider(object):
         user_socket.close()
 
 def main():
+    p = SbfProvider()
     try:
-        p = SbfProvider()
         p.loop()
     except socket.error:
         print('socket error')
