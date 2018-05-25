@@ -24,10 +24,10 @@ class SbfProvider():
            Otherwise the smallest non-zero value in Dec(e#) is the area's index
            identifying user's position.  
     """
-    def __init__(self):
+    def __init__(self, HOST="localhost", PORT=2324):
         """Init socket stream."""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(('localhost', 2324))
+        self.sock.bind((HOST, PORT))
         self.sock.listen(5)
 
     def close_stream(self):
