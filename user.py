@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
+import util
 import socket
 import numpy as np
-import util
 from sbf import sbf
+from random import shuffle
 
 class SbfUser(object):
     """User Class of the location privacy protcol.
@@ -68,6 +69,7 @@ class SbfUser(object):
         mask = []
         for i, enc in enumerate(provider_sbf_vector_enc):
             mask.append(user_sbf_vector[i] * enc)
+        shuffle(mask)
         return mask
         
     def loop(self):
@@ -78,7 +80,6 @@ class SbfUser(object):
         
         while True:
             position = input("Enter your position (longitude, latitude) as [xx.xxxx#yy.yyyy]\n").rstrip()
-            #TODO:input check
             user_sbf, non_zero = self.generate_sbf(position, sbf_data)
             mask = self.mask_message(user_sbf.filter, sbf_data['sbf_vector_enc'])
             data = {

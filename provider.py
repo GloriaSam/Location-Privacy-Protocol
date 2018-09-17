@@ -26,6 +26,9 @@ class SbfProvider():
     """
     def __init__(self, HOST="localhost", PORT=2324):
         """Init socket stream."""
+
+        if (PORT <= 0) or (PORT >65535):
+            raise ValueError("Invalid port")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((HOST, PORT))
         self.sock.listen(5)
@@ -74,13 +77,21 @@ class SbfProvider():
         print("Resulting array size: 2^", self.bit_mapping)
         print("Resulting number of hash runs: ", self.hash_runs)
 
-        # TODO: How should I set the salt?
-        self.salt = "salt"
-        self.sbf_vector = sbf(self.bit_mapping, self.hash_family, self.hash_runs, self.num_areas, self.salt)
+        self.hash_salt_path = 'salt'
+        self.sbf_vector = sbf(self.bit_mapping, self.hash_family, self.hash_runs, self.num_areas, self.hash_salt_path)
+        with open(self.hash_salt_path,'w') as salt_file:
+            self.sbf_vector.create_hash_salt(salt_file)
         self.sbf_vector.insert_from_file(file_path)
         self.sbf_vector.print_filter(0)
 
         return self.sbf_vector
+
+    """
+    def inter_salt(self):
+        self.sbf_vector.compute_apriori_area_isep()
+        while self.sbf_vector.safep
+    """
+    
 
     def obfuscate_zeros(self):
         """ Hide the server's AoI to the user, and it hide the user's position to the server
@@ -145,6 +156,7 @@ class SbfProvider():
             num_nozero (int): number of no zero values in the user's computed sbf
         Returns:
             user_area (int): user's located area
+        
         """
         user_sbf_dec = Parallel(n_jobs=4)(
             delayed(self.private_key.raw_decrypt)(int(x)) for x in mask if x != 0)
@@ -178,14 +190,14 @@ class SbfProvider():
             msg, req_type  = util.packet_recv(user_socket)
             if req_type is 'S':
                 print("Received sbf request")
-                self.create_sbf() 
+                self.create_sbf()
                 self.encrypt_sbf()
                 data = {
                     "sbf_vector_enc": self.sbf_vector_enc,
                     "bit_mapping": self.bit_mapping,
                     "hash_family": self.hash_family,
                     "hash_runs": self.hash_runs,
-                    "salt": self.salt
+                    "salt": self.hash_salt_path
                 }
                 util.packet_send(user_socket, 'S', data)
             elif req_type is 'C':

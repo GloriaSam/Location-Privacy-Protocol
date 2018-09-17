@@ -25,3 +25,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgements 
 This project uses several Python modules and in particular: numpy, socket, joblib, collections.
+

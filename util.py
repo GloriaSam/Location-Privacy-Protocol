@@ -8,7 +8,6 @@ BUFF_SIZE = 4096
 def packet_send(sock, msg_type, data=""):
     if data is not '':
         json_data = json.dumps(data)
-        size = len(json_data)
         len_payload = str(len(json_data))
         format_len = len_payload.rjust(16)
         tosend = msg_type[0] + format_len + json_data
